@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+
+<html lang="cs">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<meta content="yes" name="apple-mobile-web-app-capable"/>
+<meta content="default" name="apple-mobile-web-app-status-bar-style"/>
+<meta content="Lokace" name="apple-mobile-web-app-title"/>
+<meta content="#2f1b05" name="theme-color"/>
+<title>Místa · Dubrovník</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg-1: #1b1208;
+    --bg-2: #3a2106;
+    --beer: #f6b51f;
+    --beer-light: #ffdf73;
+    --foam: #fff7df;
+    --surface: rgba(255, 248, 225, 0.96);
+    --surface-2: rgba(255, 241, 194, 0.9);
+    --border: rgba(86, 50, 7, 0.18);
+    --text: #261606;
+    --muted: #7c5a24;
+    --green: #157347;
+    --red: #b63120;
+    --orange: #b76a00;
+    --purple: #673ab7;
+    --shadow: 0 22px 60px rgba(0,0,0,.28);
+  }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    color: var(--text);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    background:
+      radial-gradient(circle at 18% 8%, rgba(255,222,115,.44), transparent 28%),
+      radial-gradient(circle at 85% 12%, rgba(255,255,255,.18), transparent 18%),
+      linear-gradient(145deg, var(--bg-1), var(--bg-2) 46%, #0f0904);
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      radial-gradient(circle, rgba(255,255,255,.25) 0 2px, transparent 2.4px),
+      radial-gradient(circle, rgba(246,181,31,.22) 0 1.5px, transparent 2px);
+    background-size: 56px 56px, 34px 34px;
+    background-position: 8px 14px, 23px 3px;
+    opacity: .35;
+  }
+
+  #app {
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    max-width: 760px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  #topbar {
+    flex-shrink: 0;
+    padding: max(18px, env(safe-area-inset-top)) clamp(14px, 4vw, 28px) 12px;
+    color: #fff8dc;
+  }
+
+  .top-card {
+    padding: 14px 14px 13px;
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 24px;
+    background: linear-gradient(135deg, rgba(255,255,255,.16), rgba(255,255,255,.05));
+    box-shadow: 0 10px 30px rgba(0,0,0,.22);
+    backdrop-filter: blur(14px);
+    text-align: center;
+  }
+
+  .location {
+    display: block;
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: rgba(255,248,220,.78);
+    font-weight: 800;
+  }
+
+  .motto {
+    display: block;
+    margin-top: 3px;
+    font-size: clamp(18px, 5vw, 24px);
+    line-height: 1;
+    font-weight: 950;
+    letter-spacing: -.04em;
+    color: #fff3bd;
+    text-shadow: 0 2px 0 rgba(0,0,0,.18);
+  }
+
+  #content-wrap {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px clamp(14px, 4vw, 28px) 28px;
+    scrollbar-width: none;
+  }
+  #content-wrap::-webkit-scrollbar { display: none; }
+
+  .category-section {
+    display: none;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .category-section.active { display: flex; }
+
+  .place-card {
+    padding: clamp(16px, 4.5vw, 24px);
+    border-radius: 26px;
+    border: 1px solid rgba(255,255,255,.48);
+    background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,239,187,.92));
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .place-header {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .place-title {
+    font-size: clamp(22px, 6vw, 28px);
+    font-weight: 1000;
+    line-height: 1.1;
+    letter-spacing: -.04em;
+    color: #211306;
+  }
+
+  .badge-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  
+  .badge {
+    font-size: 10px;
+    font-weight: 950;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 5px 9px;
+    border-radius: 999px;
+  }
+  .badge-budget { background: #dcf8e9; color: var(--green); border: 1px solid rgba(21,115,71,.2); }
+  .badge-great  { background: #ede4ff; color: var(--purple); border: 1px solid rgba(103,58,183,.22); }
+  .badge-local  { background: #fff0bd; color: var(--orange); border: 1px solid rgba(183,106,0,.2); }
+  .badge-closed { background: #ffe0d8; color: var(--red); border: 1px solid rgba(182,49,32,.22); }
+
+  .place-desc {
+    font-size: clamp(14px, 3.8vw, 15px);
+    line-height: 1.5;
+    color: #4a3515;
+    font-weight: 550;
+    margin-bottom: 16px;
+  }
+
+  .rating {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    margin-top: 2px;
+    padding: 6px 9px;
+    border-radius: 999px;
+    background: rgba(255, 248, 225, .7);
+    border: 1px solid rgba(66,38,5,.12);
+    color: #5f3e10;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: .01em;
+  }
+  .rating small {
+    margin-left: 5px;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+
+  .map-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 46px;
+    padding: 10px;
+    border-radius: 16px;
+    border: 1px solid rgba(66,38,5,.16);
+    background: linear-gradient(180deg, #fff5c8, var(--beer));
+    color: #291704;
+    font-size: 13px;
+    font-weight: 950;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1), inset 0 -2px 0 rgba(92,55,0,.16);
+  }
+  .map-btn:active { transform: scale(.98); }
+
+  #bottomnav {
+    flex-shrink: 0;
+    display: flex;
+    gap: 6px;
+    padding: 10px 8px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    background: rgba(27, 18, 8, 0.85);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255,255,255,0.1);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  #bottomnav::-webkit-scrollbar { display: none; }
+
+  .nav-tab, .nav-home {
+    padding: 10px 14px;
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 14px;
+    background: rgba(255,255,255,.05);
+    color: #fff8dc;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all .2s;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .nav-home {
+    font-size: 16px;
+    background: rgba(246, 181, 31, 0.15);
+    border-color: rgba(246, 181, 31, 0.3);
+  }
+  .nav-tab.active {
+    background: linear-gradient(180deg, #fff5c8, var(--beer));
+    color: #291704;
+    border-color: transparent;
+    box-shadow: 0 4px 12px rgba(246,181,31,.24);
+  }
+</style>
+</head>
+<body>
+<div id="app">
+<div id="topbar">
+<div class="top-card">
+<span class="location">🗺️ Průvodce přežitím</span>
+<span class="motto" id="category-title">Restaurace</span>
+</div>
+</div>
+<div id="content-wrap"><div class="category-section active" id="sec-restaurace"><div class="place-card"><div class="place-header"><div class="place-title">Konoba Tabak</div><div class="badge-row"><span class="badge badge-budget">◆ Budget friendly</span><span class="badge badge-local">◆ Lokální jídlo</span></div><div class="rating">⭐ 4.3 Google</div></div><p class="place-desc">Lokální konoba / marenda mimo hradby. Domácí hotová jídla, grilované maso a ryby. Žádný luxus, ale přesně typ místa, kde dává smysl neplatit turistickou přirážku.</p><a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Konoba+Tabak%2C+Vukovarska+34%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Otevřít v Mapách</a></div><div class="place-card"><div class="place-header"><div class="place-title">Konoba Bonaca</div><div class="badge-row"><span class="badge badge-budget">◆ Budget friendly</span><span class="badge badge-local">◆ Ryby &amp; grill</span></div><div class="rating">⭐ 4.8 Google</div></div><p class="place-desc">Konoba v Sustjepanu mimo hlavní turistický tah. Dobrá volba na grilované kalamáry, rybu, maso a přístavnější vibe. U ryb na kilo se vždy předem ptejte na cenu.</p><a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Konoba+Bonaca%2C+Sustjepanska+Obala+23%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Otevřít v Mapách</a></div><div class="place-card"><div class="place-header"><div class="place-title">Pantarul</div><div class="badge-row"><span class="badge badge-great">◆ Skvělá restaurace</span><span class="badge badge-local">◆ Lapad</span></div><div class="rating">⭐ 4.7 Google</div></div><p class="place-desc">Moderní restaurace v Lapadu, lokální suroviny, domácí pasta a chleba. Lepší večeře bez toho, abyste platili hlavně za stůl na Stradunu. Pro skupinu raději rezervace.</p><a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Pantarul%2C+Kralja+Tomislava+1%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Otevřít v Mapách</a></div><div class="place-card"><div class="place-header"><div class="place-title">Taj Mahal, Hotel Lero</div><div class="badge-row"><span class="badge badge-great">◆ Masový ráj</span><span class="badge badge-local">◆ Bosenská kuchyně</span></div><div class="rating">⭐ 4.6 Google</div></div><p class="place-desc">Bosenské grilované maso a poctivé porce. Vybral jsem pobočku u Hotelu Lero, ne Old Town, protože na rozlučku dává mimo hradby větší smysl a je menší riziko turistického chaosu.</p><a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Taj+Mahal+Hotel+Lero%2C+Iva+Vojnovi%C4%87a+14%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Otevřít v Mapách</a></div></div><div class="category-section" id="sec-hospody"><div class="place-card"><div class="place-header"><div class="place-title">Bikers Caffe</div><div class="badge-row"><span class="badge badge-local">◆ Lokální bar</span><span class="badge badge-budget">◆ Rock / motorkáři</span></div><div class="rating">⭐ 4.3 Google</div></div><p class="place-desc">Rockovější bar nad Ploče, ne v Gruži. Chodí sem mix místních, motorkářů a lidí mimo hlavní turistický proud. Dobré na obyčejné pivo bez naleštěného Old Town divadla.</p><a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Bikers+Caffe%2C+Petra+Kre%C5%A1imira+IV+39%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Otevřít v Mapách</a></div><div class="place-card"><div class="place-header"><div class="place-title">The Gaffe Irish Pub</div><div class="badge-row"><span class="badge badge-local">◆ Uvnitř hradeb</span><span class="badge badge-budget">◆ Sport</span></div><div class="rating">⭐ 3.9 Google</div></div><p class="place-desc">Pub kousek od Stradunu. Není to čistě lokální schovka, ale pokud musíte být uvnitř hradeb a chcete pivo + sport, je to menší zlo než náhodný bar na hlavní třídě.</p><a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=The+Gaffe+Irish+Pub%2C+Miha+Pracata+4%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Otevřít v Mapách</a></div><div class="place-card"><div class="place-header"><div class="place-title">Caffe Bar Ma Belle</div><div class="badge-row"><span class="badge badge-budget">◆ Levnější pivo</span><span class="badge badge-local">◆ Lapad</span></div><div class="rating">⭐ 4.3 Google</div></div><p class="place-desc">Jednoduchý lapadský caffé bar s levnějším pivem a bez velkého turistického pozérství. Dobré jako bezpečná low-cost zastávka před večerem.</p><a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Caffe+Bar+Ma+Belle%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Otevřít v Mapách</a></div><div class="place-card" style="opacity: 0.6;"><div class="place-header"><div class="place-title">Otto Wine Bar</div><div class="badge-row"><span class="badge badge-closed">💀 DOČASNĚ UZAVŘENO</span><span class="badge badge-local">◆ Gruž port</span><span class="badge badge-great">◆ Víno / drink</span></div><div class="rating">⭐ 5.0 Google</div></div><p class="place-desc">Malý wine bar u přístavu Gruž. Nechávám ho v průvodci jen jako poznámku, protože je označený jako dočasně uzavřený. Neplánovat jako aktivní zastávku bez aktuální kontroly v Mapách.</p><a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Otto+Wine+Bar%2C+Obala+Stjepana+Radi%C4%87a+27%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Poloha v Mapách</a></div><div class="place-card"><div class="place-header"><div class="place-title">Caffe Bar Tramvaj</div><div class="badge-row"><span class="badge badge-budget">◆ Docházka od ubytka</span><span class="badge badge-local">◆ Vukovarska / Gruž</span></div><div class="rating">⭐ 4.5 Google · malý vzorek</div></div><p class="place-desc">No-frills caffé bar na Vukovarské. Tohle není designový bar, ale praktická zastávka na obyčejné pivo/kafe cestou z ubytka dolů do Gruže. Rating má malý vzorek, takže brát jako lokální fallback, ne jistotu večera.</p><a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Caffe+bar+Tramvaj%2C+Vukovarska+26%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Otevřít v Mapách</a></div><div class="place-card" style="opacity: 0.6;">
+<div class="place-header">
+<div class="place-title">Dubrovnik Beer Company</div>
+<div class="badge-row">
+<span class="badge badge-closed">💀 TRVALE UZAVŘENO</span>
+<span class="badge badge-local">◆ Neplánovat jako zastávku</span>
+</div>
+<div class="rating">⭐ 4.7 Google</div></div>
+<p class="place-desc">Industriální pivovar / taproom v Gruži. Nechávám ho v průvodci jen jako poznámku, protože aktuální veřejné zdroje ho uvádějí jako zavřený nebo nejistý. Neplánoval bych sem večer bez aktuální kontroly v mapách.</p>
+<a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Dubrovnik+Beer+Company%2C+Obala+Pape+Ivana+Pavla+II+15%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Poloha v Mapách</a>
+</div><div class="place-card" style="opacity: 0.6;">
+<div class="place-header">
+<div class="place-title">Celtic Bar Belfast</div>
+<div class="badge-row">
+<span class="badge badge-closed">💀 TRVALE UZAVŘENO</span>
+<span class="badge badge-local">◆ Neplánovat jako zastávku</span>
+</div>
+<div class="rating">⭐ 4.5 Google</div></div>
+<p class="place-desc">Kdysi irská pivnice v Lapadu. Nechávám jako informační kartu, ale jako aktivní zastávka na rozlučku nedává smysl, protože stav je vedený jako zavřeno / nespolehlivý.</p>
+<a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Celtic+Bar+Belfast%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Poloha v Mapách</a>
+</div></div><div class="category-section" id="sec-kafe"><div class="place-card"><div class="place-header"><div class="place-title">Cogito Coffee Dubrovnik</div><div class="badge-row"><span class="badge badge-great">◆ Výběrová káva</span><span class="badge badge-local">◆ Old Town</span></div><div class="rating">⭐ 4.6 Google</div></div><p class="place-desc">Dobré kafe v boční uličce. Není to dělnická snídaně pro místní, ale na kvalitní ranní kafe ve starém městě je to solidní volba.</p><a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Cogito+Coffee+Dubrovnik%2C+Old+Town%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Otevřít v Mapách</a></div><div class="place-card"><div class="place-header"><div class="place-title">Soul Caffe</div><div class="badge-row"><span class="badge badge-local">◆ Klidnější ulička</span><span class="badge badge-budget">◆ Kafe &amp; večer</span></div><div class="rating">⭐ 4.4 Google</div></div><p class="place-desc">Kavárna/bar v úzké ulici mimo hlavní proud Stradunu. Dobré na kafe ráno nebo rakiji večer. Turisti tam budou taky, ale není to frontální tourist trap.</p><a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Soul+Caffe%2C+Uska+ulica+5%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Otevřít v Mapách</a></div><div class="place-card"><div class="place-header"><div class="place-title">Coffee Break Dubrovnik</div><div class="badge-row"><span class="badge badge-budget">◆ Ranní start</span><span class="badge badge-local">◆ Mimo chaos</span></div><div class="rating">⭐ 4.7 Google</div></div><p class="place-desc">Jednoduchý podnik na kafe a rychlý start dne mimo největší tlak Old Town. Praktické, pokud nechcete řešit velký brunch.</p><a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Coffee+Break+Dubrovnik%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Otevřít v Mapách</a></div></div><div class="category-section" id="sec-plaze"><div class="place-card"><div class="place-header"><div class="place-title">Pláž Danče</div><div class="badge-row"><span class="badge badge-budget">◆ Lahváč ze supermarketu</span><span class="badge badge-local">◆ Skály</span></div><div class="rating">⭐ 4.5 Google</div></div><p class="place-desc">Skalnatá zátoka kousek za hradbami. Dobrá na večerní posed s pivem ze supermarketu. Pozor na bezpečnost při skákání a alkohol, tohle není místo na machrování.</p><a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Dan%C4%8De+Beach%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Otevřít v Mapách</a></div><div class="place-card"><div class="place-header"><div class="place-title">Pláž Bellevue</div><div class="badge-row"><span class="badge badge-great">◆ Útesy</span><span class="badge badge-local">◆ Koupání</span></div><div class="rating">⭐ 4.6 Google</div></div><p class="place-desc">Oblázková pláž pod vysokými útesy. Hezké místo na koupání bez nutnosti platit atrakce. V létě přijít raději dřív.</p><a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Bellevue+Beach%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Otevřít v Mapách</a></div><div class="place-card"><div class="place-header"><div class="place-title">Plaža Mandrač</div><div class="badge-row"><span class="badge badge-local">◆ Lapad</span><span class="badge badge-budget">◆ Klidnější</span></div><div class="rating">⭐ 4.7 Google</div></div><p class="place-desc">Betonová / městská pláž v Lapadu. Není to romantická katalogová pláž, ale pro partu a rychlé koupání bez velké produkce dobré.</p><a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Pla%C5%BEa+Mandra%C4%8D%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Otevřít v Mapách</a></div></div><div class="category-section" id="sec-vyhlidky"><div class="place-card" style="border: 1px dashed var(--orange);"><div class="place-header"><div class="place-title">Vyhlídka Nuncijata</div><div class="badge-row"><span class="badge badge-budget">🚶 U ubytování</span><span class="badge badge-local">◆ Bez davů</span></div><div class="rating">⭐ 4.5 Google</div></div><p class="place-desc">Výhled na přístav Gruž a most přímo z vašeho kopce. Zadarmo, bez front, bez Instagram cirkusu. Dobré na první orientaci po příjezdu.</p><a class="map-btn" href="https://maps.app.goo.gl/aAPeEG8TVgq8Zv988" rel="noopener" target="_blank">📍 Otevřít v Mapách</a></div><div class="place-card" style="border: 1px dashed var(--orange);"><div class="place-header"><div class="place-title">Dubrovnik Observation Point</div><div class="badge-row"><span class="badge badge-great">◆ Srđ / panorama</span><span class="badge badge-budget">◆ Bez nutnosti lanovky</span></div><div class="rating">⭐ 4.8 Google</div></div><p class="place-desc">Klasický panoramatický výhled na Old Town z kopce Srđ. Nejlepší na západ slunce, ale autem/taxíkem raději opatrně, silnice je úzká.</p><a class="map-btn" href="https://maps.app.goo.gl/4dQqdWihBvZXNVbt5" rel="noopener" target="_blank">📍 Otevřít v Mapách</a></div><div class="place-card" style="border: 1px dashed var(--orange);"><div class="place-header"><div class="place-title">Dubrovnik view</div><div class="badge-row"><span class="badge badge-great">◆ Výhled na město</span><span class="badge badge-local">◆ Krátká zastávka</span></div><div class="rating">⭐ 4.8 Google</div></div><p class="place-desc">Rychlá vyhlídka nad Dubrovníkem. Dává smysl jako foto stop, ne jako samostatný program na hodinu.</p><a class="map-btn" href="https://maps.app.goo.gl/C8h146KC2k1ipPhh7" rel="noopener" target="_blank">📍 Otevřít v Mapách</a></div><div class="place-card" style="border: 1px dashed var(--orange);"><div class="place-header"><div class="place-title">Viewpoint Dubrovnik</div><div class="badge-row"><span class="badge badge-great">◆ Lovrijenac směr</span><span class="badge badge-budget">◆ Zdarma před pevností</span></div><div class="rating">⭐ 4.9 Google</div></div><p class="place-desc">Výhled směrem na Old Town a hradby u Lovrijenacu. Dobré místo na fotku bez placení vstupu do pevnosti.</p><a class="map-btn" href="https://maps.app.goo.gl/tetLtP67vSzscEVs5" rel="noopener" target="_blank">📍 Otevřít v Mapách</a></div><div class="place-card" style="border: 1px dashed var(--orange);"><div class="place-header"><div class="place-title">Viewpoint to Tvrđava Lovrijenac</div><div class="badge-row"><span class="badge badge-great">◆ Fort Lovrijenac</span><span class="badge badge-budget">◆ Foto spot</span></div><div class="rating">⭐ 4.7 Google</div></div><p class="place-desc">Výhled na pevnost Lovrijenac a okolní zátoku. Praktické spojit s Old Town procházkou a questy.</p><a class="map-btn" href="https://maps.app.goo.gl/Buf8ibwyHDwy7yrk7" rel="noopener" target="_blank">📍 Otevřít v Mapách</a></div><div class="place-card" style="border: 1px dashed var(--orange);"><div class="place-header"><div class="place-title">Most dr. Franja Tuđmana</div><div class="badge-row"><span class="badge badge-budget">🚶 Ubytování / Gruž</span><span class="badge badge-local">◆ Výhled</span></div><div class="rating">⭐ 4.8 Google</div></div><p class="place-desc">Most s chodníkem a výhledem na přístav a moře. Dobré na fotku a krátkou procházku, ne jako hlavní program.</p><a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Franjo+Tu%C4%91man+Bridge%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Otevřít v Mapách</a></div></div><div class="category-section" id="sec-mista"><div class="place-card"><div class="place-header"><div class="place-title">Love Bar</div><div class="badge-row"><span class="badge badge-great">◆ Rooftop bar</span><span class="badge badge-local">◆ Gruž</span></div><div class="rating">⭐ 4.7 Google</div></div><p class="place-desc">Střešní bar nad přístavem Gruž. Není to nejlevnější pivo ve městě, ale na západ slunce a první drink mimo Old Town dává smysl.</p><a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Love+Bar%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Otevřít v Mapách</a></div><div class="place-card"><div class="place-header"><div class="place-title">Buža vyhlídka, ne bar</div><div class="badge-row"><span class="badge badge-budget">◆ Výhled zdarma</span><span class="badge badge-closed">◆ Pozor na tourist trap</span></div><div class="rating">⭐ 3.6 Google</div></div><p class="place-desc">Samotné místo ve skalách za hradbami stojí za krátkou zastávku. Bar bych neplánoval jako pití na celý večer, platí se hlavně poloha.</p><a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Buza+Gate%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Otevřít v Mapách</a></div><div class="place-card">
+<div class="place-header">
+<div class="place-title">Old Town: Pile Gate + Onofriova fontána</div>
+<div class="badge-row"><span class="badge badge-budget">◆ Start zdarma</span><span class="badge badge-local">◆ Sraz / voda</span></div>
+<div class="rating">⭐ 4.7 Google</div></div>
+<p class="place-desc">Nejlepší start pro krátkou trasu starým městem. Pile Gate je hlavní vstup, fontána hned za branou je dobrý sraz, rychlá pauza a bod pro quest typu historický nápis.</p>
+<a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Pile+Gate+Large+Onofrio%27s+Fountain%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Otevřít v Mapách</a>
+</div><div class="place-card">
+<div class="place-header">
+<div class="place-title">Old Town: Stradun + boční uličky</div>
+<div class="badge-row"><span class="badge badge-budget">◆ Bez vstupu</span><span class="badge badge-local">◆ Nejlepší kulisa</span></div>
+<div class="rating">⭐ 4.6 Google</div></div>
+<p class="place-desc">Stradun jen projít, nesedat si tam na jídlo ani pivo. Nejlepší atmosféra je v bočních uličkách nahoru a dolů, hlavně večer.</p>
+<a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Stradun%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Otevřít v Mapách</a>
+</div><div class="place-card">
+<div class="place-header">
+<div class="place-title">Old Town: Jezuitské schody</div>
+<div class="badge-row"><span class="badge badge-great">◆ Fotogenické</span><span class="badge badge-budget">◆ Quest spot</span></div>
+<div class="rating">⭐ 4.7 Google</div></div>
+<p class="place-desc">Jedno z nejlepších míst na fotku nebo trapnější veřejný úkol. Hezké, zdarma, ale počítejte s lidmi.</p>
+<a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Jesuit+Stairs%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Otevřít v Mapách</a>
+</div><div class="place-card">
+<div class="place-header">
+<div class="place-title">Old Town: Old Port + Porporela</div>
+<div class="badge-row"><span class="badge badge-local">◆ Přístav</span><span class="badge badge-budget">◆ Večer</span></div>
+<div class="rating">⭐ 4.8 Google</div></div>
+<p class="place-desc">Nejlepší závěr procházky starým městem. Přístav a kamenné molo dávají smysl na večerní fotku, legendu, video pro nevěstu nebo chvíli klidu mimo úzké uličky.</p>
+<a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Old+Port+Dubrovnik+Porporela%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Otevřít v Mapách</a>
+</div></div><div class="category-section" id="sec-obchody"><div class="place-card"><div class="place-header"><div class="place-title">Tommy Hipermarket Gruž</div><div class="badge-row"><span class="badge badge-budget">🛒 Hlavní nákup</span></div><div class="rating">⭐ 4.1 Google</div></div><p class="place-desc">Nejlepší první velký nákup zásob: voda, pivo, snídaně, snacky. Prakticky nejdůležitější místo po check-inu.</p><a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Tommy+Hipermarket%2C+Vukovarska+36%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Otevřít v Mapách</a></div><div class="place-card"><div class="place-header"><div class="place-title">Pemo Gruž</div><div class="badge-row"><span class="badge badge-budget">🛒 Alternativa</span></div><div class="rating">⭐ 4.1 Google</div></div><p class="place-desc">Další použitelný supermarket v Gruži. Hodí se jako fallback, pokud budete blíž Pemu než Tommymu.</p><a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Pemo%2C+Vukovarska+ulica+26%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Otevřít v Mapách</a></div><div class="place-card"><div class="place-header"><div class="place-title">Konzum Gruž</div><div class="badge-row"><span class="badge badge-budget">🛒 Přístav</span></div><div class="rating">⭐ 4.1 Google</div></div><p class="place-desc">Velký Konzum u přístavu. Praktický na rychlý nákup chlazených piv, vody a věcí před pláží nebo přesunem.</p><a class="map-btn" href="https://www.google.com/maps/search/?api=1&amp;query=Konzum+Gru%C5%BE%2C+Obala+Pape+Ivana+Pavla+II%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">📍 Otevřít v Mapách</a></div></div></div>
+<div id="bottomnav"><a class="nav-home" href="https://www.google.com/maps/search/?api=1&amp;query=Ulica+od+Nuncijate+34A%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">🏠</a><button class="nav-tab active" data-target="restaurace">Restaurace</button><button class="nav-tab" data-target="hospody">Hospody</button><button class="nav-tab" data-target="kafe">Kafe</button><button class="nav-tab" data-target="plaze">Pláže</button><button class="nav-tab" data-target="vyhlidky">Vyhlídky</button><button class="nav-tab" data-target="mista">Místa</button><button class="nav-tab" data-target="obchody">Obchody</button></div>
+</div>
+<script>
+  const tabs = document.querySelectorAll('.nav-tab');
+  const sections = document.querySelectorAll('.category-section');
+  const title = document.getElementById('category-title');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      sections.forEach(s => s.classList.remove('active'));
+
+      tab.classList.add('active');
+      const target = tab.dataset.target;
+      document.getElementById(`sec-${target}`).classList.add('active');
+      
+      title.textContent = tab.textContent;
+      tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    });
+  });
+</script>
+</body>
+</html>

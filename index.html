@@ -341,23 +341,68 @@
 <div id="bottomnav"><a class="nav-home" href="https://www.google.com/maps/search/?api=1&amp;query=Ulica+od+Nuncijate+34A%2C+Dubrovnik%2C+Croatia" rel="noopener" target="_blank">🏠</a><button class="nav-tab active" data-target="restaurace">Restaurace</button><button class="nav-tab" data-target="hospody">Hospody</button><button class="nav-tab" data-target="kafe">Kafe</button><button class="nav-tab" data-target="plaze">Pláže</button><button class="nav-tab" data-target="vyhlidky">Vyhlídky</button><button class="nav-tab" data-target="mista">Místa</button><button class="nav-tab" data-target="obchody">Obchody</button></div>
 </div>
 <script>
-  const tabs = document.querySelectorAll('.nav-tab');
+  const tabs = Array.from(document.querySelectorAll('.nav-tab'));
   const sections = document.querySelectorAll('.category-section');
   const title = document.getElementById('category-title');
+  const contentWrap = document.getElementById('content-wrap');
 
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
-      sections.forEach(s => s.classList.remove('active'));
+  let activeIndex = Math.max(0, tabs.findIndex(tab => tab.classList.contains('active')));
 
-      tab.classList.add('active');
-      const target = tab.dataset.target;
-      document.getElementById(`sec-${target}`).classList.add('active');
-      
-      title.textContent = tab.textContent;
-      tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-    });
+  function activateSection(index) {
+    activeIndex = Math.max(0, Math.min(tabs.length - 1, index));
+    const tab = tabs[activeIndex];
+    const target = tab.dataset.target;
+
+    tabs.forEach(t => t.classList.remove('active'));
+    sections.forEach(s => s.classList.remove('active'));
+
+    tab.classList.add('active');
+    document.getElementById(`sec-${target}`).classList.add('active');
+    title.textContent = tab.textContent;
+    contentWrap.scrollTop = 0;
+    tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }
+
+  tabs.forEach((tab, index) => {
+    tab.addEventListener('click', () => activateSection(index));
   });
+
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let isHorizontalSwipe = false;
+  let isVerticalScroll = false;
+
+  contentWrap.addEventListener('touchstart', event => {
+    const touch = event.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+    isHorizontalSwipe = false;
+    isVerticalScroll = false;
+  }, { passive: true });
+
+  contentWrap.addEventListener('touchmove', event => {
+    const touch = event.touches[0];
+    const dx = touch.clientX - touchStartX;
+    const dy = touch.clientY - touchStartY;
+
+    if (!isHorizontalSwipe && !isVerticalScroll) {
+      if (Math.abs(dx) > 14 || Math.abs(dy) > 14) {
+        isHorizontalSwipe = Math.abs(dx) > Math.abs(dy) * 1.25;
+        isVerticalScroll = !isHorizontalSwipe;
+      }
+    }
+  }, { passive: true });
+
+  contentWrap.addEventListener('touchend', event => {
+    const touch = event.changedTouches[0];
+    const dx = touch.clientX - touchStartX;
+    const dy = touch.clientY - touchStartY;
+
+    if (!isHorizontalSwipe || Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.25) return;
+
+    if (dx < 0) activateSection(activeIndex + 1);
+    if (dx > 0) activateSection(activeIndex - 1);
+  }, { passive: true });
 </script>
 </body>
 </html>
